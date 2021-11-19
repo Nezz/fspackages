@@ -556,6 +556,7 @@ class XMLCircularGauge extends XMLGauge {
         this.valuePos = 0;
         this.height = 63;
         this.textIncrement = 1;
+        this.fontSize = 10;
         this.forceTextColor = "";
     }
     setStyle(_styleElem) {
@@ -573,7 +574,7 @@ class XMLCircularGauge extends XMLGauge {
                 this.startAngle = parseFloat(startElem[0].textContent);
             }
             let endElem = _styleElem.getElementsByTagName("EndAngle");
-            if (startElem.length > 0) {
+            if (endElem.length > 0) {
                 this.endAngle = parseFloat(endElem[0].textContent);
             }
             let cursorElem = _styleElem.getElementsByTagName("CursorType");
@@ -591,6 +592,10 @@ class XMLCircularGauge extends XMLGauge {
                         this.valuePos = 1;
                         break;
                 }
+            }
+            let fontSizeElem = _styleElem.getElementsByTagName("FontSize");
+            if (fontSizeElem.length > 0) {
+                this.fontSize = parseFloat(fontSizeElem[0].textContent);
             }
             this.height = Math.max(40 - 40 * Math.sin(this.startAngle * Math.PI / 180), 40 - 40 * Math.sin(this.endAngle * Math.PI / 180) + (this.valuePos == 1 ? 20 : 0), (this.valuePos == 1 ? 50 : 60)) + 3;
         }
@@ -669,18 +674,18 @@ class XMLCircularGauge extends XMLGauge {
         this.rootSvg.appendChild(this.valueText_alertbg);
         this.titleText = document.createElementNS(Avionics.SVG.NS, "text");
         diffAndSetAttribute(this.titleText, "x", "50");
-        diffAndSetAttribute(this.titleText, "y", "30");
+        diffAndSetAttribute(this.titleText, "y", (20 + this.fontSize).toFixed(0));
         diffAndSetAttribute(this.titleText, "fill", "white");
-        diffAndSetAttribute(this.titleText, "font-size", "10");
+        diffAndSetAttribute(this.titleText, "font-size", this.fontSize.toFixed(0));
         diffAndSetAttribute(this.titleText, "font-family", "Roboto-Bold");
         diffAndSetAttribute(this.titleText, "text-anchor", "middle");
         diffAndSetAttribute(this.titleText, "AlertBlink", "Text");
         this.rootSvg.appendChild(this.titleText);
         this.unitText = document.createElementNS(Avionics.SVG.NS, "text");
         diffAndSetAttribute(this.unitText, "x", "50");
-        diffAndSetAttribute(this.unitText, "y", "45");
+        diffAndSetAttribute(this.unitText, "y", (35 + this.fontSize).toFixed(0));
         diffAndSetAttribute(this.unitText, "fill", "white");
-        diffAndSetAttribute(this.unitText, "font-size", "10");
+        diffAndSetAttribute(this.unitText, "font-size", this.fontSize.toFixed(0));
         diffAndSetAttribute(this.unitText, "font-family", "Roboto-Bold");
         diffAndSetAttribute(this.unitText, "text-anchor", "middle");
         diffAndSetAttribute(this.unitText, "AlertBlink", "Text");
@@ -697,7 +702,7 @@ class XMLCircularGauge extends XMLGauge {
                 diffAndSetAttribute(this.valueText, "x", (60 - 40 * Math.cos((this.endAngle + 25) * Math.PI / 180)) + '');
                 diffAndSetAttribute(this.valueText, "y", (40 - 40 * Math.sin((this.endAngle + 25) * Math.PI / 180)) + '');
                 diffAndSetAttribute(this.valueText, "text-anchor", "end");
-                diffAndSetAttribute(this.valueText, "font-size", "13");
+                diffAndSetAttribute(this.valueText, "font-size", (this.fontSize * 1.3).toFixed(0));
                 break;
         }
         diffAndSetAttribute(this.valueText, "fill", "white");
@@ -862,9 +867,12 @@ class XMLHorizontalGauge extends XMLGauge {
         this.endX = 90;
         this.width = 100;
         this.cursorColor = "white";
+        this.cursorStyle = 0;
         this.isReverseY = false;
         this.textIncrement = 1;
         this.textPrecision = 0;
+        this.strokeWidth = 2;
+        this.fontSize = 10;
     }
     setStyle(_styleElem) {
         if (_styleElem) {
@@ -887,6 +895,17 @@ class XMLHorizontalGauge extends XMLGauge {
             if (cursorColorElem.length > 0) {
                 this.cursorColor = cursorColorElem[0].textContent;
             }
+            let cursorStyleElem = _styleElem.getElementsByTagName("CursorStyle");
+            if (cursorStyleElem.length > 0) {
+                switch (cursorStyleElem[0].textContent) {
+                    case "Cursor":
+                        this.cursorStyle = 0;
+                        break;
+                    case "Fill":
+                        this.cursorStyle = 1;
+                        break;
+                }
+            }
             let widthElem = _styleElem.getElementsByTagName("Width");
             if (widthElem.length > 0) {
                 this.width = parseFloat(widthElem[0].textContent);
@@ -900,6 +919,14 @@ class XMLHorizontalGauge extends XMLGauge {
             let precisionElem = _styleElem.getElementsByTagName("ValuePrecision");
             if (precisionElem.length > 0) {
                 this.textPrecision = parseInt(precisionElem[0].textContent);
+            }
+            let fontSizeElem = _styleElem.getElementsByTagName("FontSize");
+            if (fontSizeElem.length > 0) {
+                this.fontSize = parseFloat(fontSizeElem[0].textContent);
+            }
+            let strokeWidthElem = _styleElem.getElementsByTagName("StrokeWidth");
+            if (strokeWidthElem.length > 0) {
+                this.strokeWidth = parseFloat(strokeWidthElem[0].textContent);
             }
         }
     }
@@ -920,34 +947,45 @@ class XMLHorizontalGauge extends XMLGauge {
         let bottomBar = document.createElementNS(Avionics.SVG.NS, "rect");
         diffAndSetAttribute(bottomBar, "x", this.beginX + '');
         diffAndSetAttribute(bottomBar, "y", this.isReverseY ? "2" : "20");
-        diffAndSetAttribute(bottomBar, "height", "2");
+        diffAndSetAttribute(bottomBar, "height", this.strokeWidth.toFixed(1));
         diffAndSetAttribute(bottomBar, "width", (this.endX - this.beginX) + '');
         diffAndSetAttribute(bottomBar, "fill", "white");
         this.rootSvg.appendChild(bottomBar);
         let beginLimit = document.createElementNS(Avionics.SVG.NS, "rect");
         diffAndSetAttribute(beginLimit, "x", (this.beginX - 1) + '');
         diffAndSetAttribute(beginLimit, "y", this.isReverseY ? "2" : "14");
-        diffAndSetAttribute(beginLimit, "height", "8");
-        diffAndSetAttribute(beginLimit, "width", "2");
+        diffAndSetAttribute(beginLimit, "height", (6 + this.strokeWidth).toFixed(1));
+        diffAndSetAttribute(beginLimit, "width", this.strokeWidth.toFixed(1));
         diffAndSetAttribute(beginLimit, "fill", "white");
         this.rootSvg.appendChild(beginLimit);
         let endLimit = document.createElementNS(Avionics.SVG.NS, "rect");
         diffAndSetAttribute(endLimit, "x", (this.endX - 1) + '');
         diffAndSetAttribute(endLimit, "y", this.isReverseY ? "2" : "14");
-        diffAndSetAttribute(endLimit, "height", "8");
-        diffAndSetAttribute(endLimit, "width", "2");
+        diffAndSetAttribute(endLimit, "height", (6 + this.strokeWidth).toFixed(1));
+        diffAndSetAttribute(endLimit, "width", this.strokeWidth.toFixed(1));
         diffAndSetAttribute(endLimit, "fill", "white");
         this.rootSvg.appendChild(endLimit);
-        this.cursor = document.createElementNS(Avionics.SVG.NS, "polygon");
-        if (this.isReverseY) {
-            diffAndSetAttribute(this.cursor, "points", this.beginX + ",2 " + (this.beginX - 3) + ",5 " + (this.beginX - 3) + ",10 " + (this.beginX + 3) + ",10 " + (this.beginX + 3) + ",5");
-        }
-        else {
-            diffAndSetAttribute(this.cursor, "points", this.beginX + ",20 " + (this.beginX - 3) + ",17 " + (this.beginX - 3) + ",12 " + (this.beginX + 3) + ",12 " + (this.beginX + 3) + ",17");
-        }
-        diffAndSetAttribute(this.cursor, "fill", this.cursorColor);
-        diffAndSetAttribute(this.cursor, "AlertBlink", "Red");
-        this.rootSvg.appendChild(this.cursor);
+        if (this.cursorStyle === 0) {
+          this.cursor = document.createElementNS(Avionics.SVG.NS, "polygon");
+          if (this.isReverseY) {
+              diffAndSetAttribute(this.cursor, "points", this.beginX + ",2 " + (this.beginX - 3) + ",5 " + (this.beginX - 3) + ",10 " + (this.beginX + 3) + ",10 " + (this.beginX + 3) + ",5");
+          }
+          else {
+              diffAndSetAttribute(this.cursor, "points", this.beginX + ",20 " + (this.beginX - 3) + ",17 " + (this.beginX - 3) + ",12 " + (this.beginX + 3) + ",12 " + (this.beginX + 3) + ",17");
+          }
+          diffAndSetAttribute(this.cursor, "fill", this.cursorColor);
+          diffAndSetAttribute(this.cursor, "AlertBlink", "Red");
+          this.rootSvg.appendChild(this.cursor);
+      }
+      else if (this.cursorStyle === 1) {
+          this.cursor = document.createElementNS(Avionics.SVG.NS, "rect");
+          this.cursor.setAttribute("x", this.beginX.toFixed(0));
+          this.cursor.setAttribute("y", "14");
+          this.cursor.setAttribute("height", "6");
+          this.cursor.setAttribute("width", "100");
+          diffAndSetAttribute(this.cursor, "fill", this.cursorColor);
+          this.rootSvg.appendChild(this.cursor);
+      }
         this.beginText = document.createElementNS(Avionics.SVG.NS, "text");
         diffAndSetAttribute(this.beginText, "x", this.beginX + '');
         diffAndSetAttribute(this.beginText, "y", this.isReverseY ? "20" : "30");
@@ -993,7 +1031,7 @@ class XMLHorizontalGauge extends XMLGauge {
                 diffAndSetAttribute(this.valueText, "x", (this.endX + 5) + '');
                 diffAndSetAttribute(this.valueText, "y", this.isReverseY ? "20" : "10");
                 diffAndSetAttribute(this.valueText, "fill", "white");
-                diffAndSetAttribute(this.valueText, "font-size", "12");
+                diffAndSetAttribute(this.valueText, "font-size", (this.fontSize * 1.2).toFixed(0));
                 diffAndSetAttribute(this.valueText, "font-family", "Roboto-Bold");
                 diffAndSetAttribute(this.valueText, "text-anchor", "end");
                 diffAndSetAttribute(this.valueText, "AlertBlink", "Text");
@@ -1004,7 +1042,7 @@ class XMLHorizontalGauge extends XMLGauge {
                 diffAndSetAttribute(this.valueText, "x", (this.endX + 5) + '');
                 diffAndSetAttribute(this.valueText, "y", this.isReverseY ? "20" : "20");
                 diffAndSetAttribute(this.valueText, "fill", "white");
-                diffAndSetAttribute(this.valueText, "font-size", "12");
+                diffAndSetAttribute(this.valueText, "font-size", (this.fontSize * 1.2).toFixed(0));
                 diffAndSetAttribute(this.valueText, "font-family", "Roboto-Bold");
                 diffAndSetAttribute(this.valueText, "text-anchor", "start");
                 diffAndSetAttribute(this.valueText, "AlertBlink", "Text");
@@ -1024,8 +1062,8 @@ class XMLHorizontalGauge extends XMLGauge {
     updateColorZone(_element, _begin, _end) {
         let begin = ((_begin - this.minValue) / (this.maxValue - this.minValue)) * (this.endX - this.beginX) + this.beginX;
         let end = ((_end - this.minValue) / (this.maxValue - this.minValue)) * (this.endX - this.beginX) + this.beginX;
-        diffAndSetAttribute(_element, "x", begin + '');
-        diffAndSetAttribute(_element, "width", (end - begin) + '');
+        diffAndSetAttribute(_element, "x", begin.toFixed(0));
+        diffAndSetAttribute(_element, "width", (Math.max(1, end - begin)).toFixed(0));
     }
     addColorLine(_position, _color, _context, _smoothFactor) {
         let colorLine = document.createElementNS(Avionics.SVG.NS, "rect");
@@ -1066,7 +1104,12 @@ class XMLHorizontalGauge extends XMLGauge {
     updateValue(_value, _value2) {
         if (_value != this.lastValue) {
             let translate = (((Math.max(Math.min(_value, this.maxValue), this.minValue) - this.minValue) / (this.maxValue - this.minValue)) * (this.endX - this.beginX));
-            diffAndSetAttribute(this.cursor, "transform", "translate(" + translate + " 0)");
+            if (this.cursorStyle === 0) {
+              diffAndSetAttribute(this.cursor, "transform", "translate(" + translate + " 0)");
+            }
+            else if (this.cursorStyle === 1) {
+                this.cursor.setAttribute("width", translate.toFixed(0));
+            }
             if (this.cursorLabel) {
                 diffAndSetAttribute(this.cursorLabel, "transform", "translate(" + translate + " 0)");
             }

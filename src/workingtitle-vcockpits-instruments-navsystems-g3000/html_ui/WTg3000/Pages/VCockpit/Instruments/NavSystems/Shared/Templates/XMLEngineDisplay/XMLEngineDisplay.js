@@ -2225,6 +2225,10 @@ class XMLFlapsSpeedbrakesGauge extends XMLGauge {
     setLimitValues(_begin, _end) {
         super.setLimitValues(_begin, _end);
 
+        // The stock Longitude doesn't have the max value set correctly
+        if (this.maxValue == 360)
+            this.maxValue = 35;
+
         let rotationAxisX = 72.5;
         let rotationAxisY = 20.5;
         var getPositionX = function(angle, distance) {

@@ -901,6 +901,84 @@ class AS3000_TSC extends NavSystemTouch {
         this._handleZoomEvent(event);
         this._handleControlEvent(event);
         this._handleBottomKnobPushEvent(event);
+
+        if (this.getCurrentPageGroup().name === "PFD") {
+            switch (event) {
+                case "SpeedBugs_On":
+                case "SpeedBugs_Off":
+                    if (!this._speedBugs.isInitialized) {
+                        this.SwitchToPageName("PFD", "Speed Bugs");
+                    }
+
+                    let speedBugsTabs = this._speedBugs.tabDefinitions;
+
+                    if (event.endsWith("On")) {
+                        var index = 0;
+                        if (speedBugsTabs.length > 1 && !this.airplane.sensors.isOnGround()) {
+                            index = 1;
+                        }
+
+                        for (let speedBug of speedBugsTabs[index].speedBugs) {
+                            speedBug.setShow(true);
+                        }
+                    } else if (event.endsWith("Off")) {
+                        for (let speedBugTab of speedBugsTabs.speedBugs) {
+                            for (let speedBug of speedBugTab.speedBugs) {
+                                speedBug.setShow(false);
+                            }
+                        }
+                    }
+                    break;
+            }
+        } else if (this.getCurrentPageGroup().name === "MFD") {
+            switch (event) {
+                case "Screen_Half":
+                    this._mfdHome.element._setMainPaneMode(WT_G3x5_MFDMainPaneModeSetting.Mode.HALF);
+                    break;
+                case "Screen_Full":
+                    this._mfdHome.element._setMainPaneMode(WT_G3x5_MFDMainPaneModeSetting.Mode.FULL);
+                    break;
+                case "Screen_Map":
+                    this._mfdHome.element._onMapButtonPressed();
+                    break;
+                case "Screen_Traffic":
+                    this._mfdHome.element._onTrafficButtonPressed();
+                    break;
+                case "Screen_Weather":
+                    this._mfdHome.element._onWeatherButtonPressed();
+                    break;
+                case "Screen_Charts":
+                    this._mfdHome.element._onChartsButtonPressed();
+                    break;
+                case "Screen_Inset":
+                    this._mfdHome.element._onChartsButtonPressed();
+                    switch (this.getSelectedPaneSettings().display.mode) {
+                        case WT_G3x5_PaneDisplaySetting.Mode.NAVMAP:
+                            let mapSettingElement = this.getSelectedMFDPanePages().mapSettings.element;
+                            let setting = mapSettingElement.paneSettings.navMapInset;
+                            if (setting.getValue() == WT_G3x5_NavMapDisplayInsetSetting.Mode.FLIGHT_PLAN_TEXT) {
+                                setting.setValue(WT_G3x5_NavMapDisplayInsetSetting.Mode.NONE)
+                            } else {
+                                setting.setValue(WT_G3x5_NavMapDisplayInsetSetting.Mode.FLIGHT_PLAN_TEXT)
+                            }
+                            break;
+
+                        case WT_G3x5_PaneDisplaySetting.Mode.WEATHER:
+                            let weatherRadarElement = this.getSelectedMFDPanePages().weatherRadar.element;
+                            weatherRadarElement._modeSetting.setValue(WT_WeatherRadarModel.Mode.ON);
+                            weatherRadarElement._displaySetting.setValue(WT_WeatherRadarModel.Display.WEATHER);
+
+                            let scanModeSetting = weatherRadarElement._scanModeSetting;
+                            if (scanModeSetting.getValue() == WT_WeatherRadarModel.ScanMode.HORIZONTAL) {
+                                scanModeSetting.setValue(WT_WeatherRadarModel.ScanMode.VERTICAL);
+                            } else {
+                                scanModeSetting.setValue(WT_WeatherRadarModel.ScanMode.HORIZONTAL);
+                            }
+                            break;
+                    }
+                    break;
+            }
+        }
     }
 
     goBack() {

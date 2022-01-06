@@ -903,32 +903,40 @@ class AS3000_TSC extends NavSystemTouch {
         this._handleBottomKnobPushEvent(event);
 
         if (this.getCurrentPageGroup().name === "PFD") {
-            switch (event) {
-                case "SpeedBugs_On":
-                case "SpeedBugs_Off":
-                    if (!this._speedBugs.isInitialized) {
-                        this.SwitchToPageName("PFD", "Speed Bugs");
+            if (event.startsWith("SpeedBugs")) {
+                if (!this._speedBugs.isInitialized) {
+                    this.SwitchToPageName("PFD", "Speed Bugs");
+                }
+
+                let speedBugsTabs = this._speedBugs.tabDefinitions;
+
+                if (event == "SpeedBugs_Off") {
+                    for (let speedBugTab of speedBugsTabs) {
+                        for (let speedBug of speedBugTab.speedBugs) {
+                            speedBug.setShow(false);
+                        }
+                    }
+                } else if (event == "SpeedBugs_On") {
+                    var index = 0;
+                    if (speedBugsTabs.length > 1 && !this.airplane.sensors.isOnGround()) {
+                        index = 1;
                     }
 
-                    let speedBugsTabs = this._speedBugs.tabDefinitions;
-
-                    if (event.endsWith("On")) {
-                        var index = 0;
-                        if (speedBugsTabs.length > 1 && !this.airplane.sensors.isOnGround()) {
-                            index = 1;
+                    for (let speedBug of speedBugsTabs[index].speedBugs) {
+                        speedBug.setShow(true);
+                    }
+                } else {
+                    var index = parseInt(event.split("_")[1]) - 1;
+                    if (event.endsWith("Off")) {
+                        for (let speedBug of speedBugsTabs[index].speedBugs) {
+                            speedBug.setShow(false);
                         }
-
+                    } else if (event.endsWith("On")) {
                         for (let speedBug of speedBugsTabs[index].speedBugs) {
                             speedBug.setShow(true);
                         }
-                    } else if (event.endsWith("Off")) {
-                        for (let speedBugTab of speedBugsTabs.speedBugs) {
-                            for (let speedBug of speedBugTab.speedBugs) {
-                                speedBug.setShow(false);
-                            }
-                        }
                     }
-                    break;
+                }
             }
         } else if (this.getCurrentPageGroup().name === "MFD") {
             switch (event) {
@@ -951,7 +959,6 @@ class AS3000_TSC extends NavSystemTouch {
                     this._mfdHome.element._onChartsButtonPressed();
                     break;
                 case "Screen_Inset":
-                    this._mfdHome.element._onChartsButtonPressed();
                     switch (this.getSelectedPaneSettings().display.mode) {
                         case WT_G3x5_PaneDisplaySetting.Mode.NAVMAP:
                             let mapSettingElement = this.getSelectedMFDPanePages().mapSettings.element;
